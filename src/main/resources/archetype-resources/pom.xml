@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>${groupId}</groupId>
+	<artifactId>${artifactId}</artifactId>
+	<version>${version}</version>
+
+	<packaging>jar</packaging>
+
+	<name>${artifactId}</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<mainClassFQCN>${package}.${mainClassName}</mainClassFQCN>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<openjfx.version>11</openjfx.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<!-- コンパイラ -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
+			</plugin>
+			<!-- 依存パッケージへのクラスパスとメインクラスのあるMANIFESTをもつJARの作成 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<finalName>${project.artifactId}</finalName>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib</classpathPrefix>
+							<mainClass>${mainClassFQCN}</mainClass>
+						</manifest>
+						<manifestEntries></manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+			<!-- 依存するパッケージ(無名パッケージ)をlibフォルダに出力する -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeScope>runtime</includeScope>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+							<!-- JavaFXはモジュール用フォルダに格納する -->
+							<excludeGroupIds>org.openjfx</excludeGroupIds>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-dependencies-mods</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeScope>runtime</includeScope>
+							<outputDirectory>${project.build.directory}/mods</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+							<!-- JavaFXはモジュール用フォルダに格納する -->
+							<includeGroupIds>org.openjfx</includeGroupIds>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/org.openjfx/javafx-controls -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.openjfx/javafx-fxml -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-fxml</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.openjfx/javafx-web -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-web</artifactId>
+			<version>${openjfx.version}</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>launch4j</id>
+			<activation>
+				<jdk>(,1.8]</jdk>
+				<os>
+					<family>Windows</family>
+				</os>
+			</activation>
+			<properties>
+				<exename>${project.artifactId}.exe</exename>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<!-- Launch4jによるjarファイルのexe化を行う. http://launch4j.sourceforge.net/docs.html -->
+						<groupId>org.bluestemsoftware.open.maven.plugin</groupId>
+						<artifactId>launch4j-plugin</artifactId>
+						<version>1.5.0.0</version>
+						<executions>
+							<execution>
+								<id>l4j-gui</id>
+								<phase>package</phase>
+								<goals>
+									<goal>launch4j</goal>
+								</goals>
+								<configuration>
+									<headerType>gui</headerType>
+									<outfile>target/${exename}</outfile>
+									<jar>target/${project.artifactId}.jar</jar>
+									<errTitle>Failed to execute the ${exename}</errTitle>
+									<icon>app.ico</icon>
+									<jre>
+										<path>jre</path>
+										<minVersion>1.8.0_40</minVersion>
+										<initialHeapSize>64</initialHeapSize>
+										<maxHeapSize>64</maxHeapSize>
+									</jre>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+</project>
